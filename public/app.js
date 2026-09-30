@@ -65,11 +65,11 @@
     async function run(task) {
         startBtn.disabled = true;
         try {
-            const importId = await task();
-            setTimeout(() => (location.href = '?import=' + importId), 1500);
+            await task();
         } catch (e) {
             show(100, 'Помилка: ' + e.message);
             barFill.classList.add('failed');
+        } finally {
             startBtn.disabled = false;
         }
     }
@@ -79,18 +79,6 @@
         const file = fileInput.files[0];
         if (!file) return;
         barFill.classList.remove('failed');
-        run(async () => {
-            const id = await upload(file);
-            await process(id);
-            return id;
-        });
+        run(async () => process(await upload(file)));
     });
-
-    document.querySelectorAll('.resume').forEach((btn) =>
-        btn.addEventListener('click', () => {
-            const id = Number(btn.dataset.id);
-            window.scrollTo(0, 0);
-            run(async () => (await process(id), id));
-        })
-    );
 })();
