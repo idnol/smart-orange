@@ -1,0 +1,36 @@
+services:
+  app:
+    build: ./docker/php
+    ports:
+      - "8088:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: leads
+      DB_USER: leads
+      DB_PASS: leads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: leads
+      MYSQL_USER: leads
+      MYSQL_PASSWORD: leads
+      MYSQL_ROOT_PASSWORD: root
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 3s
+      retries: 30
+
+volumes:
+  db-data:

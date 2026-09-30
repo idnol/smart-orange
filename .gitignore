@@ -1,0 +1,5 @@
+storage/uploads/*
+!storage/uploads/.gitkeep
+*.csv
+.DS_Store
+.idea/

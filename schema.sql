@@ -1,0 +1,50 @@
+SET NAMES utf8mb4;
+
+CREATE TABLE IF NOT EXISTS imports (
+    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    filename       VARCHAR(255) NOT NULL,
+    file_size      BIGINT UNSIGNED NOT NULL,
+    uploaded_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    byte_offset    BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    rows_processed INT UNSIGNED NOT NULL DEFAULT 0,
+    rows_valid     INT UNSIGNED NOT NULL DEFAULT 0,
+    rows_invalid   INT UNSIGNED NOT NULL DEFAULT 0,
+    status         ENUM('uploading', 'processing', 'done', 'failed') NOT NULL DEFAULT 'uploading',
+    error          VARCHAR(1000) NULL,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at    DATETIME NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS leads (
+    id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    import_id       INT UNSIGNED NOT NULL,
+    line_no         INT UNSIGNED NOT NULL COMMENT 'номер рядка даних у файлі (без заголовка)',
+    external_id     VARCHAR(32) NOT NULL COMMENT 'у файлі трапляються дублікати — не unique',
+    created_at      DATETIME NULL,
+    first_name      VARCHAR(100) NULL,
+    last_name       VARCHAR(100) NULL,
+    phone_raw       VARCHAR(50) NULL COMMENT 'як у файлі',
+    phone           VARCHAR(13) NULL COMMENT 'нормалізований +380XXXXXXXXX або NULL, якщо невалідний',
+    email_raw       VARCHAR(255) NULL COMMENT 'як у файлі',
+    email           VARCHAR(255) NULL COMMENT 'валідний email у нижньому регістрі або NULL',
+    city            VARCHAR(100) NULL,
+    source          VARCHAR(100) NULL,
+    utm_campaign    VARCHAR(100) NULL,
+    product         VARCHAR(150) NULL,
+    budget_uah      INT UNSIGNED NULL,
+    status          ENUM('new', 'in_progress', 'contacted', 'qualified', 'proposal_sent', 'won', 'lost', 'spam') NULL,
+    manager         VARCHAR(100) NULL,
+    comment         VARCHAR(1000) NULL,
+    next_contact_at DATETIME NULL,
+    is_valid        TINYINT(1) NOT NULL DEFAULT 1,
+    errors          VARCHAR(255) NULL COMMENT 'поля з помилками через кому',
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_import_line (import_id, line_no),
+    KEY idx_external_id (external_id),
+    KEY idx_status (status),
+    KEY idx_created_at (created_at),
+    KEY idx_phone (phone),
+    KEY idx_email (email),
+    CONSTRAINT fk_leads_import FOREIGN KEY (import_id) REFERENCES imports (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
