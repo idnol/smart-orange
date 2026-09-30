@@ -3,3 +3,4 @@ storage/uploads/*
 *.csv
 .DS_Store
 .idea/
+dump/
